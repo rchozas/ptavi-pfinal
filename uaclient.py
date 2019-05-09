@@ -8,20 +8,20 @@ Programa cliente que abre un socket a un servidor
 import socket
 import sys
 
-# partiendo de la práctica 6
 
 # Cliente UDP simple.
 
 # Dirección IP del servidor.
-if len(sys.argv) != 3:
-    sys.exit("Usage: python client.py method receiver@IP:SIPport")
+if len(sys.argv) != 4:
+    sys.exit("Usage: python uaclient.py config method option")
 try:
-    METODO = sys.argv[1].upper()
-    LOGIN = sys.argv[2].split("@")[0] + "@"
-    IP = sys.argv[2].split("@")[1].split(":")[0]
-    PUERTO = int(sys.argv[2].split('@')[1].split(":")[1])
+    FICHERO = sys.argv[1]
+    METHOD = sys.argv[2].upper()
+    OPTION = sys.argv[3]
+# FICHERO -config-(fichero de config XML), METHOD (método SIP), 
+# OPTION (parámetro opcional según el método utilizado)
 except:
-    sys.exit("Usage: python client.py method receiver@IP:SIPport")
+    sys.exit("Usage: python uaclient.py config method option")
 
 # Contenido que vamos a enviar
 LINE = METODO + " sip:" + LOGIN + IP + " SIP/2.0\r\n"
