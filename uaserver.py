@@ -6,22 +6,56 @@ Clase (y programa principal) para un servidor de eco en UDP simple
 """
 
 import socketserver
+import socket
 import sys
 import os
 import os.path
+from xml.sax import make_parser
+from xml.sax.handler import ContentHandler
+import time
 
-# partiendo de la práctica 6
+# clase XMLHandler siguiendo el esquema de etiquetas de la practica 3.
+# para manejar el fichero de configuracion XML
 
+
+class XMLHandler(ContentHandler):
+
+    def __init__(self):
+        self.lista = []
+        self.dic = {'account': ['username', 'passwd'],
+                    'uaserver': ['ip', 'puerto'],
+                    'rtpaudio': ['puerto'],
+                    'regproxy': ['ip', 'puerto'],
+                    'log': ['path'],
+                    'audio': ['path']}
+
+    def startElement(self, name, attrs):
+        """
+        starElement almacena las etiquetas, los atributos y su contenido.
+        """
+        if name in self.dic:
+            dicc = {}
+            for atributo in self.dic[name]:
+                dicc[atributo] = attrs.get(atributo, "")
+                dic_final = {name: dicc}
+            self.lista.append(dic_final)
+
+    def get_tags(self):
+        """
+        Devuelve las etiquetas, atributos y el contenido.
+        """
+        return self.lista
+        
 if len(sys.argv) != 4:
-    sys.exit("Usage: python server.py IP port audio_file")
+    sys.exit("Usage: python uaserver.py config")
 try:
     IP = sys.argv[1]
     PUERTO = int(sys.argv[2])
     FICHERO = sys.argv[3]
     if not os.path.exists(FICHERO):
-        sys.exit('Usage: python server.py IP port audio_file')
+        sys.exit("Usage: python uaserver.py config")
 except:
-    sys.exit('Usage: python server.py IP port audio_file')
+    sys.exit("Usage: python uaserver.py config")
 
 
 class EchoHandler(socketserver.DatagramRequestHandler):
