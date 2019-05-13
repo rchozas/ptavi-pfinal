@@ -10,6 +10,8 @@ import sys
 import os
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
+from uaserver import XMLHandler
+from uaserver import info_log
 
 if __name__ == "__main__":
 
@@ -19,14 +21,16 @@ if __name__ == "__main__":
         FICHERO = sys.argv[1]
         METHOD = sys.argv[2].upper()
         OPTION = sys.argv[3]
+
     # FICHERO -config-(fichero de config XML), METHOD (método SIP),
     # OPTION (parámetro opcional según el método utilizado)
+
     except:
         sys.exit("Usage: python uaclient.py config method option")
     try:
         if os.path.exists(FICHERO) is False:
             sys.exit("El fichero no existe")
-            
+
         # leer datos del fichero XML mediante el parser
         parser = make_parser()
         cHandler = XMLHandler()
@@ -52,11 +56,16 @@ if __name__ == "__main__":
     # BYE (100 Trying, 180 Ringing, 200 OK)
     try:
         Metodos_SIP = ["REGISTER", "INVITE", "BYE"]
+        metodo_sip = METHOD + " sip:"
         if METHOD == "REGISTER":
-            LINE = METHOD + " sip:" + USERNAME + ":" + UAS_PUERTO + " SIP/2.0\r\n"
+            # Fichero log, escribe evento
+            Evento = "Starting ..."
+            info_log(LOG, Evento, " ", " ", " ")
+            LINE = metodo_sip + USERNAME + ":" + UAS_PUERTO + " SIP/2.0\r\n"
             LINE += "Expires: " + OPTION + "\r\n"
+            print(LINE)
         elif METHOD == "INVITE":
-            LINE = METHOD + " sip:" + OPTION + " SIP/2.0\r\n"
+            LINE = metodo_sip + OPTION + " SIP/2.0\r\n"
             LINE += "Content-Type: application/sdp\r\n\r\n"
             LINE += "v=0\r\n"
             LINE += "o=" + USERNAME + " " + UAS_IP + "\r\n"
@@ -65,21 +74,25 @@ if __name__ == "__main__":
             LINE += "m=audio " + RTP_AUDIO + " " + "RTP\r\n"
             print(LINE)
         elif METHOD == "BYE":
-            LINE = METHOD + " sip:" + OPTION + " SIP/2.0\r\n"
+            LINE = metodo_sip + OPTION + " SIP/2.0\r\n"
     except:
         sys.exit("Usage: python uaclient.py config method option")
-               
+
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
     my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    my_socket.connect((IP, PUERTO))
-
-    print("Enviando: " + LINE)
+    my_socket.connect((RPROXY_IP, int(RPROXY_PUERTO)))
     my_socket.send(bytes(LINE, 'utf-8') + b"\r\n")
+    print("Enviando: ")
+    # enviando datos
+    my_socket.send(bytes(LINE, 'utf-8') + b"\r\n")
+    # informacion que se recibe, decodificando
     data = my_socket.recv(1024)
+    info_decode = data.decode('utf-8')
+    print(info_decode)
 
-    print('Recibido --')
-    print(data.decode('utf-8'))
+    Evento = " Received from "
+    info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, info_decode)
     print("Terminando socket...")
 
 # si recibe las respuestas 100 Trying, 180 Ringing, 200 OK
@@ -90,4 +103,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
         data = my_socket.recv(1024)
 
+# finalizando el socket, evento fin
+print("Terminando el socket")
+my_socket.close()
+Evento = " Finishing."
+info_log(LOG, Evento, " ", " ", " ")
 print("Fin.")
