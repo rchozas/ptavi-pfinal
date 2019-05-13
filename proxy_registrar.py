@@ -9,6 +9,34 @@ import socketserver
 import sys
 import json
 import time
+from xml.sax import make_parser
+from xml.sax.handler import ContentHandler
+import uaclient
+
+
+class XMLHandler(ContentHandler):
+    def __init__(self):
+        self.lista = []
+        self.dic = {'server': ['name', 'ip', 'puerto'],
+                    'database': ['path', 'passwdpath'],
+                    'log': ['path']}
+
+    def startElement(self, name, attrs):
+        """
+        starElement almacena las etiquetas, los atributos y su contenido.
+        """
+        if name in self.dic:
+            dicc = {}
+            for atributo in self.dic[name]:
+                dicc[atributo] = attrs.get(atributo, "")
+                dic_final = {name: dicc}
+            self.lista.append(dic_final)
+
+    def get_tags(self):
+        """
+        Devuelve las etiquetas, atributos y el contenido.
+        """
+        return self.lista
 
 
 class SIPRegisterHandler(socketserver.DatagramRequestHandler):
@@ -47,7 +75,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                     self.dicc_usuario[direccion] = info_usuarios
                     self.wfile.write(b"SIP/2.0 200 OK\r\n\r\n")
                 print(self.dicc_usuario)
-    
+
     def register2json(self):
         file_json = json.dumps(self.dicc_usuario)
         with open("registered.json", "w") as file_json:
