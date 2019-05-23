@@ -38,6 +38,15 @@ class XMLHandler(ContentHandler):
         """
         return self.lista
 
+def actualiza_dicc(dicc_cliente):
+    Lista_clientes = []
+    for clientes in dicc_clientes:
+        Expires = int(dicc_clientes[clientes][4])
+        Tiempo = int(time.time())
+        if Tiempo >= Expires:
+            Lista_clientes.append(clientes)
+    for No_usuario in List:
+        del dicc_cliente[No_usuario]
 
 class SIPRegisterHandler(socketserver.DatagramRequestHandler):
     """
@@ -45,10 +54,11 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
     """
 
     dicc_usuario = {}
-
+    
+    
     def handle(self):
 
-        info_usuarios = {}
+        actualiza_dicc(self.dicc_cliente)
 
         IP = self.client_address[0]
         print("IP cliente: ", IP)
