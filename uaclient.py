@@ -12,6 +12,7 @@ from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
 from uaserver import XMLHandler
 from uaserver import info_log
+import time
 
 if __name__ == "__main__":
 
@@ -82,23 +83,27 @@ if __name__ == "__main__":
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
     my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     my_socket.connect((RPROXY_IP, int(RPROXY_PUERTO)))
-    my_socket.send(bytes(LINE, 'utf-8') + b"\r\n")
+    
     print("Enviando: ")
     # enviando datos
     my_socket.send(bytes(LINE, 'utf-8') + b"\r\n")
+    
+    Evento = "Send to"
+    info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, LINE)
+    
     # informacion que se recibe, decodificando
     data = my_socket.recv(1024)
     info_decode = data.decode('utf-8')
     print(info_decode)
 
-    Evento = " Received from "
+    Evento = "Received from"
     info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, info_decode)
     print("Terminando socket...")
 
 # si recibe las respuestas 100 Trying, 180 Ringing, 200 OK
     r = data.decode('utf-8').split("\r\n\r\n")[0:-1]
     if r == ["SIP/2.0 100 Trying", "SIP/2.0 180 Ringing", "SIP/2.0 200 OK"]:
-        LINEACK = "ACK sip:" + LOGIN + IP + " SIP/2.0\r\n"
+        LINEACK = "ACK sip:" + OPTION + " SIP/2.0\r\n"
         print("Enviando: " + LINEACK)
         my_socket.send(bytes(LINE, 'utf-8') + b'\r\n')
         data = my_socket.recv(1024)
