@@ -1,17 +1,18 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-"""
-Clase (y programa principal) para un servidor de eco en UDP simple
-"""
 
 import socketserver
+import socket
 import sys
+import os
 import json
 import time
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
+from uaserver import info_log
 import uaclient
+import random
 
 
 class XMLHandler(ContentHandler):
@@ -48,24 +49,17 @@ def actualiza_dicc(dicc_cliente):
     for No_usuario in List:
         del dicc_cliente[No_usuario]
 
-class SIPRegisterHandler(socketserver.DatagramRequestHandler):
-    """
-    Echo server class
-    """
-
+class ProxyRegistrar(socketserver.DatagramRequestHandler):
+   
     dicc_usuario = {}
+    NONCE = random.getrandbits(100)
     
     
     def handle(self):
-
+        #actualizacion del dicc por si ha expirado algun cliente
         actualiza_dicc(self.dicc_cliente)
 
-        IP = self.client_address[0]
-        print("IP cliente: ", IP)
-        PORT = self.client_address[1]
-        print("Puerto: ", str(PORT))
-        line = self.rfile.read()
-
+        
         info = line.decode('utf-8')
         if (len(info) >= 2):
             if (info.split()[0].upper() == "REGISTER"):
@@ -100,11 +94,30 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
 
 
 if __name__ == "__main__":
-
-    PORT = int(sys.argv[1])
-    serv = socketserver.UDPServer(('', PORT), SIPRegisterHandler)
-    print("Lanzando servidor UDP de eco...")
     try:
+        FICHERO = sys.argv[1]
+        parser = make_parser()
+        cHandler = XMLHandler()
+        parser.setContentHandler(cHandler)
+        parser.parse(open(FICHERO))
+        lista = cHandler.get_tags()
+        
+        # info fichero XML dentro de las variables
+        NOMB_SERVIDOR = lista[0]['server']['name']
+        IP_SERVIDOR = lista[0]['server']['ip']
+        PUERTO_SERVIDOR = lista[0]['server']['puerto']
+        PATH = lista[1]['database']['path']
+        PASSWD = lista[1]['database']['passwdpath']
+        LOG = lista[2]['log']['path']
+    except:
+        sys.exit("Usage: python proxy_registrar.py config")
+    try:
+        enviar = NOM_SERVIDOR + "Listening at port" + PUERTO_SERVIDOR + "..."
+        PUERTO = int(PUERTO_SERVIDOR)
+        Evento = "Starting..."
+        info_log(LOG, Evento, "", "", "")
+        IP = "127.0.0.1"
+        serv = socketserver.UDPServer((IP, PUERTO), ProxyRegistrar)
         serv.serve_forever()
-    except KeyboardInterrupt:
-        print("Finalizado servidor")
+    except:
+        sys.exit("Usage: python proxy_registrar.py config")
