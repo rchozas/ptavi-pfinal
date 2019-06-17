@@ -62,17 +62,6 @@ def info_log(archivo, evento, ip, puerto, linea):
     fichero.close()
 
 
-if len(sys.argv) != 4:
-    sys.exit("Usage: python uaserver.py config")
-try:
-    IP = sys.argv[1]
-    PUERTO = int(sys.argv[2])
-    FICHERO = sys.argv[3]
-    if not os.path.exists(FICHERO):
-        sys.exit("Usage: python uaserver.py config")
-except:
-    sys.exit("Usage: python uaserver.py config")
-
 
 class EchoHandler(socketserver.DatagramRequestHandler):
     """
@@ -109,7 +98,8 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                 elif metodo == "ACK":
                     Evento = "sending RTP"
                     info_log(LOG, Evento, " ", " ", " ")
-                    aEjecutar = "./mp32rtp -i 127.0.0.1 -p 23032 < " + FICHERO
+                    aEjecutar = "./mp32rtp -i " + UAS_IP + "-p" + RTP_AUDIO
+                    aEjecutar += " < " + AUDIO
                     print("vamos a ejecutar", aEjecutar)
                     os.system(aEjecutar)
                 elif metodo == "BYE":
@@ -119,17 +109,15 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                     info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, enviar)
                 elif metodo and metodo not in metodos:
                     enviar = "SIP/2.0 405 Method Not Allowed\r\n\r\n"
-                    self.wfile.write(bytes(enviar, 'utf-8')
-                    Evento ="Send to"
+                    self.wfile.write(bytes(enviar, 'utf-8'))
+                    Evento = "Send to"
                     info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, enviar)
                 else:
                     enviar = "SIP/2.0 400 Bad request\r\n\r\n"
                     self.wfile.write(bytes(enviar, 'utf-8'))
                     Evento = "Send to"
                     info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, enviar)
-            else:
-                break
-
+            
             # Si no hay más líneas salimos del bucle infinito
             if not line:
                 break
@@ -137,7 +125,34 @@ class EchoHandler(socketserver.DatagramRequestHandler):
 
 
 if __name__ == "__main__":
-    # Creamos servidor de eco y escuchamos
-    serv = socketserver.UDPServer((IP, PUERTO), EchoHandler)
-    print("Listening...")
-    serv.serve_forever()
+   
+    try:
+        FICHERO = sys.argv[1]
+        parser = make_parser()
+        cHandler = XMLHandler()
+        parser.setContentHandler(cHandler)
+        parser.parse(open(FICHERO))
+        lista = cHandler.get_tags()
+
+        # info fichero XML
+        USERNAME = lista[0]['account']['username']
+        PASSWD = lista[0]['account']['passwd']
+        UAS_IP = lista[1]['uaserver']['ip']
+        UAS_PUERTO = lista[1]['uaserver']['puerto']
+        RTP_AUDIO = lista[2]['rtpaudio']['puerto']
+        RPROXY_IP = lista[3]['regproxy']['ip']
+        RPROXY_PUERTO = lista[3]['regproxy']['puerto']
+        LOG = lista[4]['log']['path']
+        AUDIO = lista[5]['audio']['path']
+    except:
+        sys.exit("Usage: python uaserver.py config")
+    try:
+        puerto = int(UAS_PUERTO)
+        serv = socketserver.UDPServer((UAS_IP, PUERTO), EchoHandler)
+        print("Listening...")
+        serv.serve_forever()
+    except:
+        Evento = "Error..."
+        info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, " ")
+        
+        sys.exit("Error: The Server is not listening")
