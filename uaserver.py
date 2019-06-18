@@ -1,10 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-"""
-Clase (y programa principal) para un servidor de eco en UDP simple
-"""
-
 import socketserver
 import socket
 import sys
@@ -62,7 +58,6 @@ def info_log(archivo, evento, ip, puerto, linea):
     fichero.close()
 
 
-
 class EchoHandler(socketserver.DatagramRequestHandler):
     """
     Echo server class
@@ -78,7 +73,7 @@ class EchoHandler(socketserver.DatagramRequestHandler):
             metodo = line.decode('utf-8').split(' ')[0]
             if len(line.decode('utf-8')) >= 2:
                 # Fichero log, escribe evento
-                Evento = "Received from"
+                Evento = "Received from "
                 info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, line.decode('utf-8'))
                 if metodo == "INVITE":
                     enviar = b"SIP/2.0 100 Trying\r\n\r\n"
@@ -93,10 +88,10 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                     # envio de respuesta
                     self.wfile.write(bytes(enviar, 'utf-8'))
                     # Fichero log, escribe evento
-                    Evento = "Send to"
+                    Evento = "Send to "
                     info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, enviar)
                 elif metodo == "ACK":
-                    Evento = "sending RTP"
+                    Evento = "sending RTP "
                     info_log(LOG, Evento, " ", " ", " ")
                     aEjecutar = "./mp32rtp -i " + UAS_IP + "-p" + RTP_AUDIO
                     aEjecutar += " < " + AUDIO
@@ -105,27 +100,26 @@ class EchoHandler(socketserver.DatagramRequestHandler):
                 elif metodo == "BYE":
                     enviar = "SIP/2.0 200 OK\r\n\r\n"
                     self.wfile.write(bytes(enviar, 'utf-8'))
-                    Evento = "Send to"
+                    Evento = "Send to "
                     info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, enviar)
                 elif metodo and metodo not in metodos:
                     enviar = "SIP/2.0 405 Method Not Allowed\r\n\r\n"
                     self.wfile.write(bytes(enviar, 'utf-8'))
-                    Evento = "Send to"
+                    Evento = "Send to "
                     info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, enviar)
                 else:
                     enviar = "SIP/2.0 400 Bad request\r\n\r\n"
                     self.wfile.write(bytes(enviar, 'utf-8'))
-                    Evento = "Send to"
+                    Evento = "Send to "
                     info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, enviar)
-            
             # Si no hay más líneas salimos del bucle infinito
             if not line:
                 break
-            # print(line.decode('utf-8'))
+            
 
 
 if __name__ == "__main__":
-   
+
     try:
         FICHERO = sys.argv[1]
         parser = make_parser()
@@ -144,15 +138,14 @@ if __name__ == "__main__":
         RPROXY_PUERTO = lista[3]['regproxy']['puerto']
         LOG = lista[4]['log']['path']
         AUDIO = lista[5]['audio']['path']
-    except:
+    except IndexError:
         sys.exit("Usage: python uaserver.py config")
     try:
         puerto = int(UAS_PUERTO)
-        serv = socketserver.UDPServer((UAS_IP, PUERTO), EchoHandler)
+        serv = socketserver.UDPServer((UAS_IP, puerto), EchoHandler)
         print("Listening...")
         serv.serve_forever()
-    except:
-        Evento = "Error..."
+    except IndexError:
+        Evento = "Error... "
         info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, " ")
-        
         sys.exit("Error: The Server is not listening")
