@@ -80,13 +80,10 @@ class ProxyRegistrarHandler(socketserver.DatagramRequestHandler):
 
     def handle(self):
         # actualizacion del dicc por si ha expirado algun cliente
-        print("eÑ")
-        actualiza_dicc(self.dicc_clientes)
-        print(actualiza_dicc)
-        IP = self.client_address[0]
-        print(IP)
-        PUERTO = self.client_address[1]
-        print(PUERTO)
+        
+        actualiza_dicc(self.dicc_clientes)        
+        #IP = self.client_address[0]        
+        #PUERTO = self.client_address[1]        
 
         while 1:
             # Leyendo línea a línea lo que nos envía el cliente
@@ -98,12 +95,14 @@ class ProxyRegistrarHandler(socketserver.DatagramRequestHandler):
             PUERTO = self.client_address[1]
 
             Evento = "Received from"
-            info_log(LOG, Evento, IP, PUERTO, linea)
+            info_log(LOG, Evento, IP, PUERTO, linea.decode('utf-8'))
             if len(linea.decode('utf-8')) >= 2:
                 if metodo == "REGISTER":
                     lista = linea.decode('utf-8').split('\r\n')
+                    
                     cliente = lista[0].split(':')[1]
-                    puertoua = lista[0].split(':')[2].split(' ')[0]
+                    
+                    puertoua = lista[0].split(':')[1].split(' ')[0]
                     if len(lista) == 4:
                         enviar = "SIP/2.0 401 Unauthorized\r\n"
                         enviar += "WWW Authenticate: Digest nonce="
@@ -123,6 +122,7 @@ class ProxyRegistrarHandler(socketserver.DatagramRequestHandler):
                         Evento = "Send to "
                         info_log(LOG, Evento, IP, PUERTO, enviar)
                         self.wfile.write(bytes(enviar, 'utf-8'))
+                        ####
                     else:
                         IP_registrado= u_resgistrado[0]
                         PUERTO_registrado= int(u_registrado[1])
@@ -182,29 +182,26 @@ if __name__ == "__main__":
         lista = cHandler.get_tags()
 
         # info fichero XML dentro de las variables
-        NOMB_SERVIDOR = lista[0]['server']['name']
-        print(NOMB_SERVIDOR)
+        NOMB_SERVIDOR = lista[0]['server']['name']        
         IP_SERVIDOR = lista[0]['server']['ip']
         PUERTO_SERVIDOR = lista[0]['server']['puerto']
         PATH = lista[1]['database']['path']
-        PASSWD = lista[1]['database']['passwdpath']
-        print(PASSWD)
-        LOG = lista[2]['log']['path']
-        print(LOG)
+        PASSWD = lista[1]['database']['passwdpath']        
+        LOG = lista[2]['log']['path']       
         
         fichero = open(PATH, "a")
         Linea = "Usuario\tIP\tPuerto\t" + "Fecha de Registro\t"
-        Linea += "Tiempo de expiracion\r\n"
-        print (Linea)
+        Linea += "Tiempo de expiracion\r\n"       
         fichero.write(Linea)
         fichero.close()
         
-        print("hola")
-        enviar = NOMB_SERVIDOR + "Listening at port" + PUERTO_SERVIDOR + "..."
-        print(enviar)
+    except:
+        sys.exit("Usage: python proxy_registrar.py config")
+    try: 
+        enviar = NOMB_SERVIDOR + " Listening at port " + PUERTO_SERVIDOR + "..."
+        print(enviar)        
         PUERTO1= int(PUERTO_SERVIDOR)
-        Evento = "Starting..."
-        print(Evento)
+        Evento = "Starting..."        
         info_log(LOG, Evento, "", "", "")
         IP = "127.0.0.1"
         serv = socketserver.UDPServer((IP, PUERTO1), ProxyRegistrarHandler)
