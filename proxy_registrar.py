@@ -94,7 +94,7 @@ class ProxyRegistrarHandler(socketserver.DatagramRequestHandler):
             IP = self.client_address[0]
             PUERTO = self.client_address[1]
 
-            Evento = "Received from"
+            Evento = "Received from "
             info_log(LOG, Evento, IP, PUERTO, linea.decode('utf-8'))
             if len(linea.decode('utf-8')) >= 2:
                 if metodo == "REGISTER":
@@ -126,10 +126,21 @@ class ProxyRegistrarHandler(socketserver.DatagramRequestHandler):
                         Evento = "Send to "
                         info_log(LOG, Evento, IP, PUERTO, enviar)
                         self.wfile.write(bytes(enviar, 'utf-8'))
-                        ####
+                        
                     else:
                         IP_registrado= u_resgistrado[0]
                         PUERTO_registrado= int(u_registrado[1])
+                        resp = "SIP/2.0 100 Trying\r\n\r\n"
+                        resp += "SIP/2.0 180 Ringing\r\n\r\n"
+                        resp += "SIP/2.0 200 OK\r\n\r\n"
+                        resp +="Via: SIP/2.0/UDP 127.0.0.1:5555;\r\n"
+                        resp += "brach=z9hG4bK6464641000b43c52d6000f03\r\n"
+                       
+                        abrir_socket(LOG, IP_registrado, PUERTO_registrado,resp) 
+                        self.wfile.write(bytes(resp, 'utf-8'))
+                        Evento = "Send to "
+                        info_log(LOG, Evento, IP, PUERTO, resp)
+                        
                 elif metodo == "ACK":
                     direcc = linea.decode('utf-8').split(" ")[1]
                     User = direcc.split(":")[1]
@@ -159,6 +170,8 @@ class ProxyRegistrarHandler(socketserver.DatagramRequestHandler):
                     else:
                         IP_registrado= u_resgistrado[0]
                         PUERTO_registrado= int(u_registrado[1])
+                        enviar = "SIP/2.0 200 OK\r\n\r\n"
+                        
                 elif metodo and metodo not in metodos:
                     enviar = "SIP/2.0 405 Method Not Allowed\r\n\r\n"
                     enviar +="Via: SIP/2.0/UDP 127.0.0.1:5555;\r\n"
