@@ -1,1 +1,2 @@
 Fichero avanzadas
+1.- Cabecera proxy
