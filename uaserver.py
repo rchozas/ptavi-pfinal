@@ -69,16 +69,18 @@ class EchoHandler(socketserver.DatagramRequestHandler):
         while 1:
             # Leyendo línea a línea lo que nos envía el cliente
             line = self.rfile.read()
+            info_decode = line.decode('utf-8')
             metodos = ["INVITE", "ACK", "BYE"]
             metodo = line.decode('utf-8').split(' ')[0]
             if len(line.decode('utf-8')) >= 2:
+                print("recibimos\r\n" + line.decode('utf-8'))
                 # Fichero log, escribe evento
                 Evento = "Received from "
-                info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, line.decode('utf-8'))
+                info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, info_decode)
                 if metodo == "INVITE":
-                    enviar = b"SIP/2.0 100 Trying\r\n\r\n"
-                    enviar += b"SIP/2.0 180 Ringing\r\n\r\n"
-                    enviar += b"SIP/2.0 200 OK\r\n\r\n"
+                    enviar = "SIP/2.0 100 Trying\r\n\r\n"
+                    enviar += "SIP/2.0 180 Ringing\r\n\r\n"
+                    enviar += "SIP/2.0 200 OK\r\n\r\n"
                     enviar += "Content-Type: application/sdp\r\n\r\n"
                     enviar += "v=0\r\n"
                     enviar += "o=" + USERNAME + " " + UAS_IP + "\r\n"
@@ -115,7 +117,6 @@ class EchoHandler(socketserver.DatagramRequestHandler):
             # Si no hay más líneas salimos del bucle infinito
             if not line:
                 break
-            
 
 
 if __name__ == "__main__":
