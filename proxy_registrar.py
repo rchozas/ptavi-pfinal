@@ -50,7 +50,8 @@ def abrir_socket(path, ip, puerto, linea):
         Evento = "send to"
         decodificar = linea.decode('utf-8')
         info_log(LOG, Evento, ip, Puerto, decodificar)
-        
+
+
 def registro_usuarios(dicc_clientes, cliente):
 
     # comprobacion de usuario registrado
@@ -59,6 +60,7 @@ def registro_usuarios(dicc_clientes, cliente):
     else:
         info = dicc_clientes[cliente]
     return info
+
 
 def actualiza_dicc(dicc_clientes):
     Lista_clientes = []
@@ -78,13 +80,12 @@ class ProxyRegistrarHandler(socketserver.DatagramRequestHandler):
 
     def handle(self):
         # actualizacion del dicc por si ha expirado algun cliente
-        
-        actualiza_dicc(self.dicc_clientes)        
-        # IP = self.client_address[0]        
-        # PUERTO = self.client_address[1]        
 
+        actualiza_dicc(self.dicc_clientes)
+        # IP = self.client_address[0]
+        # PUERTO = self.client_address[1]
         while 1:
-            # Leyendo línea a línea lo que nos envía el cliente
+        # Leyendo línea a línea lo que nos envía el cliente
             linea = self.rfile.read()
             print(linea)
             metodo = linea.decode('utf-8').split(' ')[0].upper()
@@ -97,9 +98,7 @@ class ProxyRegistrarHandler(socketserver.DatagramRequestHandler):
             if len(linea.decode('utf-8')) >= 2:
                 if metodo == "REGISTER":
                     lista = linea.decode('utf-8').split('\r\n')
-                    
                     cliente = lista[0].split(':')[1]
-                    
                     puertoua = lista[0].split(':')[1].split(' ')[0]
                     if len(lista) == 4:
                         enviar = "SIP/2.0 401 Unauthorized\r\n"
@@ -119,40 +118,38 @@ class ProxyRegistrarHandler(socketserver.DatagramRequestHandler):
                     u_registrado = registro_usuarios(self.dicc_clientes, User)
                     if u_registrado == "0":
                         enviar = "SIP/2.0 404 User Not Found\r\n\r\n"
-                        enviar +="Via: SIP/2.0/UDP 127.0.0.1:5555;\r\n"
+                        enviar += "Via: SIP/2.0/UDP 127.0.0.1:5555;\r\n"
                         enviar += "brach=z9hG4bK6464641000b43c52d6000f03\r\n"
                         Evento = "Send to "
                         info_log(LOG, Evento, IP, PUERTO, enviar)
                         self.wfile.write(bytes(enviar, 'utf-8'))
-                        
                     else:
                         IP_registrado = u_registrado[0]
                         PUERTO_registrado = int(u_registrado[1])
                         resp = "SIP/2.0 100 Trying\r\n\r\n"
                         resp += "SIP/2.0 180 Ringing\r\n\r\n"
                         resp += "SIP/2.0 200 OK\r\n\r\n"
-                        resp +="Via: SIP/2.0/UDP 127.0.0.1:5555;\r\n"
+                        resp += "Via: SIP/2.0/UDP 127.0.0.1:5555;\r\n"
                         resp += "brach=z9hG4bK6464641000b43c52d6000f03\r\n"
                        
-                        abrir_socket(LOG, IP_registrado, PUERTO_registrado,resp) 
+                        abrir_socket(LOG, IP_registrado, PUERTO_registrado, resp)
                         self.wfile.write(bytes(resp, 'utf-8'))
                         Evento = "Send to "
                         info_log(LOG, Evento, IP, PUERTO, resp)
-                        
                 elif metodo == "ACK":
                     direcc = linea.decode('utf-8').split(" ")[1]
                     User = direcc.split(":")[1]
                     u_registrado = registro_usuarios(self.dicc_clientes, User)
                     if u_registrado == "0":
                         enviar = "SIP/2.0 404 User Not Found\r\n\r\n"
-                        enviar +="Via: SIP/2.0/UDP 127.0.0.1:5555;\r\n"
+                        enviar += "Via: SIP/2.0/UDP 127.0.0.1:5555;\r\n"
                         enviar += "brach=z9hG4bK6464641000b43c52d6000f03\r\n"
                         Evento = "Send to "
                         info_log(LOG, Evento, IP, PUERTO, enviar)
                         self.wfile.write(bytes(enviar, 'utf-8'))
                     else:
-                        IP_registrado= u_registrado[0]
-                        PUERTO_registrado= int(u_registrado[1])
+                        IP_registrado = u_registrado[0]
+                        PUERTO_registrado = int(u_registrado[1])
                         abrir_socket(LOG, IP_registrado, PUERTO_registrado, linea)
                 elif metodo == "BYE":
                     direcc = linea.decode('utf-8').split(" ")[1]
@@ -160,26 +157,25 @@ class ProxyRegistrarHandler(socketserver.DatagramRequestHandler):
                     u_registrado = registro_usuarios(self.dicc_clientes, User)
                     if u_registrado == "0":
                         enviar = "SIP/2.0 404 User Not Found\r\n\r\n"
-                        enviar +="Via: SIP/2.0/UDP 127.0.0.1:5555;\r\n"
+                        enviar += "Via: SIP/2.0/UDP 127.0.0.1:5555;\r\n"
                         enviar += "brach=z9hG4bK6464641000b43c52d6000f03\r\n"
                         Evento = "Send to "
                         info_log(LOG, Evento, IP, PUERTO, enviar)
                         self.wfile.write(bytes(enviar, 'utf-8'))
                     else:
-                        IP_registrado= u_resgistrado[0]
-                        PUERTO_registrado= int(u_registrado[1])
-                        enviar = "SIP/2.0 200 OK\r\n\r\n"
-                        
+                        IP_registrado = u_resgistrado[0]
+                        PUERTO_registrado = int(u_registrado[1])
+                        enviar = "SIP/2.0 200 OK\r\n\r\n"                                          
                 elif metodo and metodo not in metodos:
                     enviar = "SIP/2.0 405 Method Not Allowed\r\n\r\n"
-                    enviar +="Via: SIP/2.0/UDP 127.0.0.1:5555;\r\n"
+                    enviar += "Via: SIP/2.0/UDP 127.0.0.1:5555;\r\n"
                     enviar += "brach=z9hG4bK6464641000b43c52d6000f03\r\n"
                     self.wfile.write(bytes(enviar, 'utf-8'))
                     Evento = "Send to "
                     info_log(LOG, Evento, IP, PUERTO, enviar)
                 else:
                     enviar = "SIP/2.0 400 Bad request\r\n\r\n"
-                    enviar +="Via: SIP/2.0/UDP 127.0.0.1:5555;\r\n"
+                    enviar += "Via: SIP/2.0/UDP 127.0.0.1:5555;\r\n"
                     enviar += "brach=z9hG4bK6464641000b43c52d6000f03\r\n"
                     self.wfile.write(bytes(enviar, 'utf-8'))
                     Evento = "Send to "
@@ -209,9 +205,8 @@ if __name__ == "__main__":
         IP_SERVIDOR = lista[0]['server']['ip']
         PUERTO_SERVIDOR = lista[0]['server']['puerto']
         PATH = lista[1]['database']['path']
-        PASSWD = lista[1]['database']['passwdpath']        
+        PASSWD = lista[1]['database']['passwdpath']
         LOG = lista[2]['log']['path']       
-        
         fichero = open(PATH, "a")
         Linea = "Usuario\tIP\tPuerto\t" + "Fecha de Registro\t"
         Linea += "Tiempo de expiracion\r\n"       
@@ -223,12 +218,11 @@ if __name__ == "__main__":
     try: 
         enviar = NOMB_SERVIDOR + " Listening at port " + PUERTO_SERVIDOR + "..."
         print(enviar)        
-        PUERTO1= int(PUERTO_SERVIDOR)
-        Evento = "Starting..."        
+        PUERTO1 = int(PUERTO_SERVIDOR)
+        Evento = "Starting..."
         info_log(LOG, Evento, "", "", "")
         IP = "127.0.0.1"
         serv = socketserver.UDPServer((IP, PUERTO1), ProxyRegistrarHandler)
         serv.serve_forever()
     except:
         sys.exit("Usage: Error")
-        
