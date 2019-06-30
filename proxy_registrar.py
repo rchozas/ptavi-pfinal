@@ -85,7 +85,7 @@ class ProxyRegistrarHandler(socketserver.DatagramRequestHandler):
         # IP = self.client_address[0]
         # PUERTO = self.client_address[1]
         while 1:
-        # Leyendo línea a línea lo que nos envía el cliente
+            # Leyendo línea a línea lo que nos envía el cliente
             linea = self.rfile.read()
             print(linea)
             metodo = linea.decode('utf-8').split(' ')[0].upper()
@@ -131,7 +131,6 @@ class ProxyRegistrarHandler(socketserver.DatagramRequestHandler):
                         resp += "SIP/2.0 200 OK\r\n\r\n"
                         resp += "Via: SIP/2.0/UDP 127.0.0.1:5555;\r\n"
                         resp += "brach=z9hG4bK6464641000b43c52d6000f03\r\n"
-                       
                         abrir_socket(LOG, IP_registrado, PUERTO_registrado, resp)
                         self.wfile.write(bytes(resp, 'utf-8'))
                         Evento = "Send to "
@@ -165,7 +164,7 @@ class ProxyRegistrarHandler(socketserver.DatagramRequestHandler):
                     else:
                         IP_registrado = u_resgistrado[0]
                         PUERTO_registrado = int(u_registrado[1])
-                        enviar = "SIP/2.0 200 OK\r\n\r\n"                                          
+                        enviar = "SIP/2.0 200 OK\r\n\r\n"
                 elif metodo and metodo not in metodos:
                     enviar = "SIP/2.0 405 Method Not Allowed\r\n\r\n"
                     enviar += "Via: SIP/2.0/UDP 127.0.0.1:5555;\r\n"
@@ -182,7 +181,7 @@ class ProxyRegistrarHandler(socketserver.DatagramRequestHandler):
                     info_log(LOG, Evento, IP, PUERTO, enviar)
             else:
                 break
-                
+
     def register2json(self):
         with open("registered.json", "w") as file_json:
             json.dump(self.dicc_usuarios, file_json, sort_keys=True, indent=4)
@@ -190,8 +189,10 @@ class ProxyRegistrarHandler(socketserver.DatagramRequestHandler):
     def json2resgistered(self):
         with open("registered.json", "r") as datos_fichero:
             self.dicc_usuarios = json.load(datos_fichero)
-       
+
+
 if __name__ == "__main__":
+
     try:
         FICHERO = sys.argv[1]
         parser = make_parser()
@@ -206,23 +207,23 @@ if __name__ == "__main__":
         PUERTO_SERVIDOR = lista[0]['server']['puerto']
         PATH = lista[1]['database']['path']
         PASSWD = lista[1]['database']['passwdpath']
-        LOG = lista[2]['log']['path']       
+        LOG = lista[2]['log']['path']
         fichero = open(PATH, "a")
         Linea = "Usuario\tIP\tPuerto\t" + "Fecha de Registro\t"
-        Linea += "Tiempo de expiracion\r\n"       
+        Linea += "Tiempo de expiracion\r\n"
         fichero.write(Linea)
         fichero.close()
-        
-    except:
+
+    except IndexError:
         sys.exit("Usage: python proxy_registrar.py config")
-    try: 
+    try:
         enviar = NOMB_SERVIDOR + " Listening at port " + PUERTO_SERVIDOR + "..."
-        print(enviar)        
+        print(enviar)
         PUERTO1 = int(PUERTO_SERVIDOR)
         Evento = "Starting..."
         info_log(LOG, Evento, "", "", "")
         IP = "127.0.0.1"
         serv = socketserver.UDPServer((IP, PUERTO1), ProxyRegistrarHandler)
         serv.serve_forever()
-    except:
+    except IndexError:
         sys.exit("Usage: Error")
