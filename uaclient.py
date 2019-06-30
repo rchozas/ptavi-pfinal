@@ -13,6 +13,7 @@ from xml.sax.handler import ContentHandler
 from uaserver import XMLHandler
 from uaserver import info_log
 import time
+from random import randint
 
 if __name__ == "__main__":
 
@@ -85,14 +86,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
     my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     my_socket.connect((RPROXY_IP, int(RPROXY_PUERTO)))
     print("Enviando: ")
-
     # enviando datos
     my_socket.send(bytes(LINE, 'utf-8') + b"\r\n")
     Evento = "Send to "
-    print(Evento)
     info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, LINE)
-    
-
     # informacion que se recibe, decodificando
     data = my_socket.recv(1024)
     info_decode = data.decode('utf-8')
@@ -101,7 +98,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
     Evento = "Received from "
     info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, info_decode)
     print("Terminando socket...")
-    
+
     nueva_lista = info_decode.split("\r\n\r\n")[0:-1]
     # codigos de respuesta UA
     Trying = "SIP/2.0 100 Trying"
@@ -125,8 +122,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
         Evento = " Send to "
         info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, LineaACK)
     # RTP
-        recep_IP = nueva_lista[4].split(" ")[1]
-        recep_puerto = info_decode.split("\r\n")(" ")[1]
+        recep_IP = info_decode.split("\r\n")[1]
+        recep_puerto = info_decode.split("\r\n").split(" ")[1]
         aEjecutar = "./mp32rtp -i " + recep_IP + " -p " + recep_puerto
         aEjecutar += "<" + PATH_AUDIO
         Evento = " enviando RTP "
@@ -149,11 +146,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
         Evento = " Send to "
         info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, LINE)
         data = my_socket.recv(1024)
-        #info_decode = data.decode('utf-8')
+        # info_decode = data.decode('utf-8')
         print(info_decode)
         Evento = " Received from "
         info_log(LOG, Evento, RPROXY_IP, RPROXY_PUERTO, info_decode)
-        #data = my_socket.recv(1024)
+        # data = my_socket.recv(1024)
 
 
 # finalizando el socket, evento fin
