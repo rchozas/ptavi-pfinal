@@ -20,7 +20,6 @@ class XMLHandler(ContentHandler):
         self.dic = {'server': ['name', 'ip', 'puerto'],
                     'database': ['path', 'passwdpath'],
                     'log': ['path']}
-       
 
     def startElement(self, name, attrs):
         """
@@ -32,14 +31,13 @@ class XMLHandler(ContentHandler):
                 dicc[atributo] = attrs.get(atributo, "")
                 dic_final = {name: dicc}
             self.lista.append(dic_final)
-            
+
     def get_tags(self):
         """
         Devuelve las etiquetas, atributos y el contenido.
         """
         return self.lista
-        
-        
+
 
 # abrir el socket, lo configuramos y lo atamos a un servidor/puerto
 def abrir_socket(path, ip, puerto, linea):
@@ -82,8 +80,8 @@ class ProxyRegistrarHandler(socketserver.DatagramRequestHandler):
         # actualizacion del dicc por si ha expirado algun cliente
         
         actualiza_dicc(self.dicc_clientes)        
-        #IP = self.client_address[0]        
-        #PUERTO = self.client_address[1]        
+        # IP = self.client_address[0]        
+        # PUERTO = self.client_address[1]        
 
         while 1:
             # Leyendo línea a línea lo que nos envía el cliente
@@ -105,7 +103,7 @@ class ProxyRegistrarHandler(socketserver.DatagramRequestHandler):
                     puertoua = lista[0].split(':')[1].split(' ')[0]
                     if len(lista) == 4:
                         enviar = "SIP/2.0 401 Unauthorized\r\n"
-                        enviar +="Via: SIP/2.0/UDP 127.0.0.1:5555;\r\n"
+                        enviar += "Via: SIP/2.0/UDP 127.0.0.1:5555;\r\n"
                         enviar += "brach=z9hG4bK6464641000b43c52d6000f03\r\n"
                         enviar += "WWW Authenticate: Digest nonce="
                         enviar += str(self.NONCE)
@@ -128,8 +126,8 @@ class ProxyRegistrarHandler(socketserver.DatagramRequestHandler):
                         self.wfile.write(bytes(enviar, 'utf-8'))
                         
                     else:
-                        IP_registrado= u_resgistrado[0]
-                        PUERTO_registrado= int(u_registrado[1])
+                        IP_registrado = u_registrado[0]
+                        PUERTO_registrado = int(u_registrado[1])
                         resp = "SIP/2.0 100 Trying\r\n\r\n"
                         resp += "SIP/2.0 180 Ringing\r\n\r\n"
                         resp += "SIP/2.0 200 OK\r\n\r\n"
@@ -153,7 +151,7 @@ class ProxyRegistrarHandler(socketserver.DatagramRequestHandler):
                         info_log(LOG, Evento, IP, PUERTO, enviar)
                         self.wfile.write(bytes(enviar, 'utf-8'))
                     else:
-                        IP_registrado= u_resgistrado[0]
+                        IP_registrado= u_registrado[0]
                         PUERTO_registrado= int(u_registrado[1])
                         abrir_socket(LOG, IP_registrado, PUERTO_registrado, linea)
                 elif metodo == "BYE":
@@ -207,7 +205,7 @@ if __name__ == "__main__":
         lista = cHandler.get_tags()
 
         # info fichero XML dentro de las variables
-        NOMB_SERVIDOR = lista[0]['server']['name']        
+        NOMB_SERVIDOR = lista[0]['server']['name']
         IP_SERVIDOR = lista[0]['server']['ip']
         PUERTO_SERVIDOR = lista[0]['server']['puerto']
         PATH = lista[1]['database']['path']
